@@ -58,30 +58,30 @@ compute_qc_score(adata)
 
 ## Parity with R
 
-在 SpaceTrooper 内置 CosMx 测试数据集（905 cells, 1010 genes）上与 R 参考输出比较：
+Benchmarked on the SpaceTrooper bundled CosMx dataset (905 cells, 1010 genes) against R reference output:
 
-### QC_score（主输出）
+### QC_score (primary output)
 
-| 指标 | 值 | 门控 | 状态 |
+| Metric | Value | Gate | Status |
 |---|---|---|---|
 | **Pearson r** | **0.989** | ≥ 0.90 | ✅ |
-| 最大绝对误差 | 0.194 | — | — |
-| 平均绝对误差 | 0.027 | — | — |
-| R 均值 | 0.809 | — | — |
-| Python 均值 | 0.755 | — | — |
+| Max absolute error | 0.194 | — | — |
+| Mean absolute error | 0.027 | — | — |
+| R mean | 0.809 | — | — |
+| Python mean | 0.755 | — | — |
 
-### 中间指标（机器精度匹配）
+### Intermediate metrics (machine-precision match)
 
-| 指标 | max abs error | 门控 | 状态 |
+| Metric | Max abs error | Gate | Status |
 |---|---|---|---|
 | log2SignalDensity | 4.88e-15 | < 1e-8 | ✅ |
 | Area_um | 5.68e-14 | < 1e-8 | ✅ |
 | total | 0.00e+00 | < 1e-8 | ✅ |
 | ctrl_total_ratio | ~1e-15 | < 1e-8 | ✅ |
 
-### 异常值标签（完全匹配）
+### Outlier labels (exact match)
 
-| 标签 | R | Python |
+| Label | R | Python |
 |---|---|---|
 | log2SignalDensity LOW | 38 | 38 ✅ |
 | log2SignalDensity HIGH | 19 | 19 ✅ |
@@ -94,9 +94,9 @@ compute_qc_score(adata)
 
 ## Speed benchmark
 
-在 905-cell CosMx 数据上测量完整 QC 管道（spatialPerCellQC → computeOutliersQCScore → checkOutliers → computeQCScore）：
+Full QC pipeline (spatialPerCellQC → computeOutliersQCScore → checkOutliers → computeQCScore) on 905-cell CosMx data:
 
-| 平台 | 墙钟时间 | 加速比 |
+| Platform | Wall-clock | Speedup |
 |---|---|---|
 | **Python (py-spacetrooper)** | **0.068s** | **102×** |
 | R (SpaceTrooper) | 6.956s | 1× |
@@ -105,72 +105,72 @@ compute_qc_score(adata)
 
 ## R ⇄ Python function dictionary
 
-### QC 指标计算
+### QC metrics
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
 | `spatialPerCellQC(spe, micronConvFact=0.12, rmZeros=TRUE, negProbList=...)` | `spatial_per_cell_qc(adata, micron_conv_fact=0.12, rm_zeros=True, neg_prob_list=...)` | SPE → AnnData |
-| `computeThresholdFlags(spe, totalThreshold=0, ctrlTotRatioThreshold=0.1)` | `compute_threshold_flags(adata, total_threshold=0, ctrl_tot_ratio_threshold=0.1)` | 无 |
+| `computeThresholdFlags(spe, totalThreshold=0, ctrlTotRatioThreshold=0.1)` | `compute_threshold_flags(adata, total_threshold=0, ctrl_tot_ratio_threshold=0.1)` | — |
 
-### 异常值检测
+### Outlier detection
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
-| `computeSpatialOutlier(spe, computeBy, method="mc", mcDoScale=FALSE, scuttleType="both")` | `compute_spatial_outlier(adata, compute_by, method="mc", mc_do_scale=False, scuttle_type="both", nmads=3)` | 新增 `nmads` 参数 |
-| `computeOutliersQCScore(spe, metricList=...)` | `compute_outliers_qc_score(adata, metric_list=...)` | 无 |
-| `checkOutliers(spe, verbose=FALSE)` | `check_outliers(adata, verbose=False)` | 无 |
-| `getFencesOutlier(spe, fencesOf, highLow="both", decimalRound=NULL)` | `get_fences_outlier(adata, fences_of, high_low="both", decimal_round=None)` | 阈值存在 `adata.uns` |
+| `computeSpatialOutlier(spe, computeBy, method="mc", mcDoScale=FALSE, scuttleType="both")` | `compute_spatial_outlier(adata, compute_by, method="mc", mc_do_scale=False, scuttle_type="both", nmads=3)` | Added `nmads` param |
+| `computeOutliersQCScore(spe, metricList=...)` | `compute_outliers_qc_score(adata, metric_list=...)` | — |
+| `checkOutliers(spe, verbose=FALSE)` | `check_outliers(adata, verbose=False)` | — |
+| `getFencesOutlier(spe, fencesOf, highLow="both", decimalRound=NULL)` | `get_fences_outlier(adata, fences_of, high_low="both", decimal_round=None)` | Thresholds in `adata.uns` |
 
-### QC 评分（GLM）
+### QC score (GLM)
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
-| `computeQCScore(spe, bestLambda=NULL, verbose=FALSE)` | `compute_qc_score(adata, best_lambda=None, verbose=False)` | 使用 sklearn 替代 glmnet |
-| `computeTrainDF(colData, formulaVars, tech, verbose=FALSE)` | `compute_train_df(coldata, formula_vars, tech, verbose=False)` | 无 |
-| `computeLambda(trainDF, modelFormula)` | `compute_lambda(train_df, var_names)` | 返回固定 lambda=7.9 |
-| `trainModel(modelMatrix, trainDF)` | `train_model(model_matrix, train_df, C=None)` | 返回 `(model, mean, std)` |
-| `getModelFormula(formulaVars, verbose=FALSE)` | `get_model_formula(formula_vars, verbose=False)` | 返回变量名列表 |
+| `computeQCScore(spe, bestLambda=NULL, verbose=FALSE)` | `compute_qc_score(adata, best_lambda=None, verbose=False)` | sklearn replaces glmnet |
+| `computeTrainDF(colData, formulaVars, tech, verbose=FALSE)` | `compute_train_df(coldata, formula_vars, tech, verbose=False)` | — |
+| `computeLambda(trainDF, modelFormula)` | `compute_lambda(train_df, var_names)` | Returns fixed lambda=7.9 |
+| `trainModel(modelMatrix, trainDF)` | `train_model(model_matrix, train_df, C=None)` | Returns `(model, mean, std)` |
+| `getModelFormula(formulaVars, verbose=FALSE)` | `get_model_formula(formula_vars, verbose=False)` | Returns variable name list |
 
-### 多边形操作
+### Polygon operations
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
 | `readPolygons(polygonsFile, type="csv", x=..., y=..., xloc=..., yloc=...)` | `read_polygons(polygons_file, file_type="csv", x=..., y=..., xloc=..., yloc=...)` | sf → GeoDataFrame |
-| `readPolygonsCosmx(polygonsFile, type="csv", ...)` | `read_polygons_cosmx(polygons_file, file_type="csv", ...)` | 无 |
-| `readPolygonsXenium(polygonsFile, type="parquet", ...)` | `read_polygons_xenium(polygons_file, file_type="parquet", ...)` | 无 |
-| `readPolygonsMerfish(polygons, type="parquet", ...)` | `read_polygons_merfish(polygons_source, file_type="parquet", ...)` | HDF5 未实现 |
-| `computeAreaFromPolygons(polygons)` | `compute_area_from_polygons(gdf)` | 无 |
-| `computeAspectRatioFromPolygons(polygons)` | `compute_aspect_ratio_from_polygons(gdf)` | 无 |
-| `computeCenterFromPolygons(polygons, coldata)` | `compute_center_from_polygons(gdf, coldata)` | 无 |
+| `readPolygonsCosmx(polygonsFile, type="csv", ...)` | `read_polygons_cosmx(polygons_file, file_type="csv", ...)` | — |
+| `readPolygonsXenium(polygonsFile, type="parquet", ...)` | `read_polygons_xenium(polygons_file, file_type="parquet", ...)` | — |
+| `readPolygonsMerfish(polygons, type="parquet", ...)` | `read_polygons_merfish(polygons_source, file_type="parquet", ...)` | HDF5 not implemented |
+| `computeAreaFromPolygons(polygons)` | `compute_area_from_polygons(gdf)` | — |
+| `computeAspectRatioFromPolygons(polygons)` | `compute_aspect_ratio_from_polygons(gdf)` | — |
+| `computeCenterFromPolygons(polygons, coldata)` | `compute_center_from_polygons(gdf, coldata)` | — |
 | `addPolygonsToSPE(spe, polygons, polygonsCol="polygons")` | `add_polygons_to_adata(adata, polygons, polygons_col="polygons")` | SPE → AnnData |
 
-### 数据读取
+### Data readers
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
-| `readCosmxSPE(dirName, sampleName="sample01", ...)` | `read_cosmx_spe(dir_name, sample_name="sample01", ...)` | 返回 AnnData |
-| `readMerfishSPE(dirName, sampleName="sample01", ...)` | `read_merfish_spe(dir_name, sample_name="sample01", ...)` | 返回 AnnData |
-| `readXeniumSPE(dirName, sampleName="sample01", ...)` | `read_xenium_spe(dir_name, sample_name="sample01", ...)` | 返回 AnnData |
+| `readCosmxSPE(dirName, sampleName="sample01", ...)` | `read_cosmx_spe(dir_name, sample_name="sample01", ...)` | Returns AnnData |
+| `readMerfishSPE(dirName, sampleName="sample01", ...)` | `read_merfish_spe(dir_name, sample_name="sample01", ...)` | Returns AnnData |
+| `readXeniumSPE(dirName, sampleName="sample01", ...)` | `read_xenium_spe(dir_name, sample_name="sample01", ...)` | Returns AnnData |
 
-### 可视化
+### Visualization
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
 | `plotMetricHist(spe, metric, fillColor=..., useFences=..., fencesColors=...)` | `plot_metric_hist(adata, metric, fill_color=..., use_fences=..., fences_colors=...)` | ggplot2 → matplotlib |
 | `plotCentroids(spe, colourBy=..., pointCol=..., size=...)` | `plot_centroids(adata, colour_by=..., point_color=..., size=...)` | ggplot2 → matplotlib |
 | `plotQScoreTerms(spe, sampleId=..., size=...)` | `plot_qc_score_terms(adata, sample_id=..., size=...)` | ggplot2 → matplotlib |
 
-### 工具函数
+### Utilities
 
-| R 函数 | Python 函数 | 参数差异 |
+| R function | Python function | Notes |
 |---|---|---|
 | `.getActiveGeometryName(sf)` | `get_active_geometry_name(gdf)` | sf → GeoDataFrame |
-| `.setActiveGeometry(sf, name)` | `set_active_geometry(gdf, name)` | 无 |
-| `.renameGeometry(sf, from, to, activate=FALSE)` | `rename_geometry(gdf, from_name, to_name, activate=False)` | 无 |
+| `.setActiveGeometry(sf, name)` | `set_active_geometry(gdf, name)` | — |
+| `.renameGeometry(sf, from, to, activate=FALSE)` | `rename_geometry(gdf, from_name, to_name, activate=False)` | — |
 
-### 关键概念映射
+### Key concept mapping
 
-| R 概念 | Python 对应 |
+| R concept | Python equivalent |
 |---|---|
 | `SpatialExperiment` | `AnnData` |
 | `sf` (simple features) | `GeoDataFrame` (geopandas) |
