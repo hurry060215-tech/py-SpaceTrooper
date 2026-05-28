@@ -1,10 +1,12 @@
-# py-spacetrooper
+# py-SpaceTrooper
 
 [![PyPI version](https://img.shields.io/pypi/v/py-spacetrooper)](https://pypi.org/project/py-spacetrooper/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI downloads](https://img.shields.io/pypi/dm/py-spacetrooper)](https://pypi.org/project/py-spacetrooper/)
 
 Python port of [SpaceTrooper](https://github.com/drighelli/SpaceTrooper) — Quality Control for image-based spatial transcriptomics data.
+
+GitHub: [github.com/omicverse/py-SpaceTrooper](https://github.com/omicverse/py-SpaceTrooper) | PyPI: [py-spacetrooper](https://pypi.org/project/py-spacetrooper/)
 
 ## Install
 
