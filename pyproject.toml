@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "py-spacetrooper"
+version = "0.1.1"
+description = "Quality Control for image-based spatial transcriptomics data — Python port of SpaceTrooper"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "SpaceTrooper Team"},
+]
+dependencies = [
+    "numpy>=1.22",
+    "pandas>=1.5",
+    "scipy>=1.9",
+    "scikit-learn>=1.1",
+    "anndata>=0.8",
+    "matplotlib>=3.5",
+    "seaborn>=0.12",
+    "shapely>=2.0",
+    "geopandas>=0.12",
+    "pyarrow>=10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "rpy2>=3.5",
+]
+
+[tool.setuptools.packages.find]
+include = ["spacetrooper*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
